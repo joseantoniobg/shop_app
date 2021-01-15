@@ -19,42 +19,49 @@ class ProductItem extends StatelessWidget {
     return Consumer<Product>(
       builder: (c, product, _) => ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: GridTile(
-          child: GestureDetector(
-            onTap: () {
-              // Navigator.of(context).push(
-              //   MaterialPageRoute(
-              //     builder: (ctx) => ProductDetailScreen(title),
-              //   ),
-              // );
-              Navigator.of(context).pushNamed(
-                ProductDetailScreen.routName,
-                arguments: product.id,
-              );
-            },
-            child: Image.network(
-              product.imageUrl,
-              fit: BoxFit.cover,
-            ),
-          ),
-          footer: GridTileBar(
-            backgroundColor: Colors.black54,
-            leading: IconButton(
-              icon: Icon(
-                  product.isFavorite ? Icons.favorite : Icons.favorite_border),
-              onPressed: () => product.toggleFavoriteStatus(),
-              color: Color.fromRGBO(255, 0, 0, 1),
-            ),
-            title: Text(
-              product.title,
-              textAlign: TextAlign.center,
-            ),
-            trailing: IconButton(
-              icon: Icon(Icons.shopping_cart),
-              onPressed: () {
-                cart.addItem(product.id, product.price, product.title);
+        child: InkWell(
+          child: GridTile(
+            child: GestureDetector(
+              onTap: () {
+                // Navigator.of(context).push(
+                //   MaterialPageRoute(
+                //     builder: (ctx) => ProductDetailScreen(title),
+                //   ),
+                // );
+                Navigator.of(context).pushNamed(
+                  ProductDetailScreen.routName,
+                  arguments: product.id,
+                );
               },
-              color: Theme.of(context).accentColor,
+              child: Image.network(
+                product.imageUrl,
+                fit: BoxFit.cover,
+              ),
+            ),
+            footer: GridTileBar(
+              backgroundColor: Colors.black54,
+              leading: IconButton(
+                icon: Icon(product.isFavorite
+                    ? Icons.favorite
+                    : Icons.favorite_border),
+                onPressed: () => product.toggleFavoriteStatus(),
+                color: Color.fromRGBO(255, 0, 0, 1),
+              ),
+              title: Text(
+                product.title,
+                textAlign: TextAlign.center,
+              ),
+              trailing: InkWell(
+                child: IconButton(
+                  icon: Container(
+                    child: Icon(Icons.shopping_cart),
+                  ),
+                  onPressed: () {
+                    cart.addItem(product.id, product.price, product.title);
+                  },
+                  color: Theme.of(context).accentColor,
+                ),
+              ),
             ),
           ),
         ),
