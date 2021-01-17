@@ -14,10 +14,12 @@ class AppDrawer extends StatelessWidget {
             automaticallyImplyLeading: false,
           ),
           Divider(),
-          DrawerItem(Icons.credit_card, 'Shop', '/'),
-          DrawerItem(Icons.payment, 'Orders', OrdersScreen.routeName),
+          DrawerItem(
+              Icons.credit_card, 'Shop', '/', ActionType.pushReplacement),
+          DrawerItem(Icons.payment, 'Orders', OrdersScreen.routeName,
+              ActionType.pushReplacement),
           DrawerItem(Icons.shopping_bag, 'Manage Products',
-              UserProductsScreen.routeName),
+              UserProductsScreen.routeName, ActionType.pushReplacement),
         ],
       ),
     );
