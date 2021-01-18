@@ -43,7 +43,9 @@ class Products with ChangeNotifier {
     if (_showFavoritesOnly) {
       return _items.where((prod) => prod.isFavorite).toList();
     } else {
-      return [..._items];
+      List<Product> i = [..._items];
+      i.sort((a, b) => a.title.compareTo(b.title));
+      return i;
     }
   }
 
@@ -61,8 +63,30 @@ class Products with ChangeNotifier {
   //   notifyListeners();
   // }
 
-  void addProduct() {
-    //_items.add(value);
+  void addProduct(Product prod) {
+    final newProduct = Product(
+      id: DateTime.now().toString(),
+      title: prod.title,
+      description: prod.description,
+      price: prod.price,
+      imageUrl: prod.imageUrl,
+    );
+    _items.add(newProduct);
+    notifyListeners();
+  }
+
+  void updateProduct(String id, Product prod) {
+    final prodIndex = _items.indexWhere((element) => element.id == id);
+    if (prodIndex >= 0) {
+      _items[prodIndex] = prod;
+    } else {
+      addProduct(prod);
+    }
+    notifyListeners();
+  }
+
+  void removeProduct(String id) {
+    _items.removeWhere((element) => element.id == id);
     notifyListeners();
   }
 
