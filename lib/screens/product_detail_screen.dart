@@ -16,6 +16,7 @@ class ProductDetailScreen extends StatelessWidget {
       listen: false,
     ).findById(id);
     return Scaffold(
+      backgroundColor: Colors.grey,
       appBar: AppBar(
         title: Text(loadedProduct.title),
       ),
