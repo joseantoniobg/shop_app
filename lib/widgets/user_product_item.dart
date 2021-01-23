@@ -13,6 +13,7 @@ class UserProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scaffold = Scaffold.of(context);
     return ListTile(
       title: Text(title),
       leading: CircleAvatar(
@@ -32,22 +33,36 @@ class UserProductItem extends StatelessWidget {
             ),
             IconButton(
               icon: Icon(Icons.delete),
-              onPressed: () {
+              onPressed: () async {
                 Product p =
                     Provider.of<Products>(context, listen: false).findById(id);
-                Provider.of<Products>(context, listen: false).removeProduct(id);
+
+                try {
+                  await Provider.of<Products>(context, listen: false)
+                      .removeProduct(id);
+                } catch (error) {
+                  scaffold.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'An error occured!',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }
+
                 Scaffold.of(context).hideCurrentSnackBar();
                 Scaffold.of(context).showSnackBar(SnackBar(
                   content: Text(
                     'Product Removed!',
                     textAlign: TextAlign.center,
                   ),
-                  duration: Duration(seconds: 3),
+                  duration: Duration(seconds: 5),
                   action: SnackBarAction(
                     label: 'UNDO',
-                    onPressed: () {
-                      Provider.of<Products>(context, listen: false)
-                          .addProduct(p);
+                    onPressed: () async {
+                      await Provider.of<Products>(context, listen: false)
+                          .addProductAsync(p);
                     },
                   ),
                 ));

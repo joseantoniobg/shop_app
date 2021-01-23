@@ -2,11 +2,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shop_app/config/general_config.dart';
+import 'package:shop_app/models/http_exception.dart';
 import './product.dart';
 
 class Products with ChangeNotifier {
-  final url =
-      'https://shop-app-14f38-default-rtdb.firebaseio.com/products.json';
+  static const urlRepository = '/products';
+
   List<Product> _items = [];
 
   // List<Product> _items = [
@@ -48,7 +50,8 @@ class Products with ChangeNotifier {
 
   Future<void> fetchAndSetProducts() async {
     try {
-      final response = await http.get(url);
+      final response =
+          await http.get(GeneralConfig.baseURL + urlRepository + '.json');
       final extratedData = json.decode(response.body) as Map<String, dynamic>;
       final List<Product> loadedProducts = [];
 
@@ -99,7 +102,7 @@ class Products with ChangeNotifier {
   Future<void> addProductAsync(Product prod) async {
     try {
       final response = await http.post(
-        url,
+        GeneralConfig.baseURL + urlRepository + '.json',
         body: json.encode({
           'title': prod.title,
           'description': prod.description,
@@ -124,11 +127,9 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addProduct(Product prod) {
-    const url =
-        'https://shop-app-14f38-default-rtdb.firebaseio.com/products.json';
     return http
         .post(
-      url,
+      GeneralConfig.baseURL + urlRepository + '.json',
       body: json.encode({
         'title': prod.title,
         'description': prod.description,
@@ -152,19 +153,45 @@ class Products with ChangeNotifier {
     });
   }
 
-  void updateProduct(String id, Product prod) {
-    final prodIndex = _items.indexWhere((element) => element.id == id);
-    if (prodIndex >= 0) {
-      _items[prodIndex] = prod;
-    } else {
-      addProduct(prod);
+  Future<void> updateProduct(String id, Product prod) async {
+    try {
+      final prodIndex = _items.indexWhere((element) => element.id == id);
+      if (prodIndex >= 0) {
+        final url = GeneralConfig.baseURL + urlRepository + '/$id.json';
+        await http.patch(url,
+            body: json.encode({
+              'title': prod.title,
+              'description': prod.description,
+              'imageUrl': prod.imageUrl,
+              'price': prod.price
+            }));
+
+        _items[prodIndex] = prod;
+      } else {
+        addProductAsync(prod);
+      }
+      notifyListeners();
+    } catch (error) {
+      throw error;
     }
-    notifyListeners();
   }
 
-  void removeProduct(String id) {
-    _items.removeWhere((element) => element.id == id);
-    notifyListeners();
+  Future<void> removeProduct(String id) async {
+    final prodIndex = _items.indexWhere((element) => element.id == id);
+    if (prodIndex >= 0) {
+      final url = GeneralConfig.baseURL + urlRepository + '/$id.json';
+      final existingIndex = _items.indexWhere((element) => element.id == id);
+      var existingProduct = this.findById(id);
+      final response = await http.delete(url);
+      _items.removeWhere((element) => element.id == id);
+      notifyListeners();
+      if (response.statusCode >= 400) {
+        _items.insert(existingIndex, existingProduct);
+        throw HttpException(
+            'Error in request: ' + response.statusCode.toString());
+      }
+      existingProduct = null;
+    }
   }
 
   Product findById(String id) {
