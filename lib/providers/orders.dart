@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:shop_app/config/general_config.dart';
-import 'package:shop_app/providers/products.dart';
 import '../providers/cart.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -28,22 +27,20 @@ class Orders with ChangeNotifier {
     return [..._orders];
   }
 
-  void addOrder(List<CartItem> cartProducts, double total) async {
+  Future<void> addOrder(List<CartItem> cartProducts, double total) async {
     try {
       await http.post(GeneralConfig.baseURL + _urlRepository + '.json',
           body: json.encode({
             'amount': total,
-            'datetime': DateTime.now(),
-            'products:': [
-              cartProducts.forEach((product) {
-                return {
-                  'id': product.id,
-                  'price': product.price,
-                  'quantity': product.quantity,
-                  'title': product.title,
-                };
-              }),
-            ]
+            'datetime': DateTime.now().toString(),
+            'products:': cartProducts.map((product) {
+              return {
+                'id': product.id,
+                'price': product.price,
+                'quantity': product.quantity,
+                'title': product.title,
+              };
+            }).toList(),
           }));
       _orders.insert(
         0,
@@ -56,6 +53,7 @@ class Orders with ChangeNotifier {
       );
       notifyListeners();
     } catch (error) {
+      _orders.removeAt(0);
       throw error;
     }
   }
