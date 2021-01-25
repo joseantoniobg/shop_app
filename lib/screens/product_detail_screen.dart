@@ -17,15 +17,17 @@ class ProductDetailScreen extends StatelessWidget {
     ).findById(id);
     return Scaffold(
       backgroundColor: Colors.grey,
-      appBar: AppBar(
-        title: Text(loadedProduct.title),
-      ),
-      body: SingleChildScrollView(
-        child: Container(
-          color: Colors.grey,
-          child: Column(
-            children: [
-              Container(
+      // appBar: AppBar(
+      //   title: Text(loadedProduct.title),
+      // ),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 300,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(loadedProduct.title),
+              background: Container(
                 decoration: BoxDecoration(
                     gradient: LinearGradient(
                   colors: [
@@ -60,6 +62,10 @@ class ProductDetailScreen extends StatelessWidget {
                   ),
                 ),
               ),
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildListDelegate([
               Card(
                 margin: EdgeInsets.all(10),
                 child: Column(
@@ -116,10 +122,20 @@ class ProductDetailScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              //Spacer(),
-            ],
+              SizedBox(
+                height: 1000,
+              )
+            ]),
           ),
-        ),
+        ],
+        // child: Container(
+        //   color: Colors.grey,
+        //   child: Column(
+        //     children: [
+        //       //Spacer(),
+        //     ],
+        //   ),
+        // ),
       ),
     );
   }

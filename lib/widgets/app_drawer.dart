@@ -17,7 +17,7 @@ class AppDrawer extends StatelessWidget {
           DrawerItem(
               Icons.credit_card, 'Shop', '/', ActionType.pushReplacement),
           DrawerItem(Icons.payment, 'Orders', OrdersScreen.routeName,
-              ActionType.pushReplacement),
+              ActionType.pushCustom),
           DrawerItem(Icons.shopping_bag, 'Manage Products',
               UserProductsScreen.routeName, ActionType.pushReplacement),
         ],
