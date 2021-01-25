@@ -1,10 +1,9 @@
-import 'package:http/http.dart' as http;
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shop_app/providers/products.dart';
-import 'package:shop_app/widgets/loading_overlay.dart';
 
+import '../providers/auth.dart';
+import '../providers/products.dart';
+import '../widgets/loading_overlay.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/products_grid.dart';
 import '../widgets/badge.dart';
@@ -17,29 +16,43 @@ enum FilterOptions {
 }
 
 class ProductsOverviewScreen extends StatefulWidget {
+  static const routeName = '/overview';
   @override
   _ProductsOverviewScreenState createState() => _ProductsOverviewScreenState();
 }
 
 class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
   var _showOnlyFavorites = false;
-  var _isInit = true;
+  //var _isInit = true;
   var _isLoading = true;
 
   @override
-  void didChangeDependencies() {
-    if (_isInit) {
-      _isLoading = true;
-      setState(() {});
-
-      Provider.of<Products>(context).fetchAndSetProducts().then((_) {
-        _isLoading = false;
-        setState(() {});
-      });
-    }
-    _isInit = false;
-    super.didChangeDependencies();
+  void initState() {
+    Future.delayed(Duration.zero).then((_) =>
+        Provider.of<Products>(context, listen: false)
+            .fetchAndSetProducts()
+            .then((_) {
+          _isLoading = false;
+          if (this.mounted) {
+            setState(() {});
+          }
+        }));
+    super.initState();
   }
+
+  // @override
+  // void didChangeDependencies() {
+  //   if (_isInit) {
+  //     _isLoading = true;
+  //     setState(() {});
+  //     Provider.of<Products>(context).fetchAndSetProducts().then((_) {
+  //       _isLoading = false;
+  //       setState(() {});
+  //     });
+  //   }
+  //   _isInit = false;
+  //   super.didChangeDependencies();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +78,30 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
                 );
               },
             ),
+          ),
+          IconButton(
+            icon: Icon(Icons.exit_to_app),
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                        title: Text('Log Out'),
+                        content: Text('Are you sure you want to log out?'),
+                        actions: [
+                          FlatButton(
+                            child: Text('Yes'),
+                            onPressed: () {
+                              Provider.of<Auth>(ctx, listen: false).logOut();
+                              Navigator.of(ctx).pushReplacementNamed('/');
+                            },
+                          ),
+                          FlatButton(
+                            child: Text('No'),
+                            onPressed: () => Navigator.of(ctx).pop(),
+                          )
+                        ],
+                      ));
+            },
           ),
           PopupMenuButton(
             onSelected: (FilterOptions selectedValue) {
@@ -93,7 +130,7 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
       drawer: AppDrawer(),
       body: Stack(children: [
         ProductsGrid(_showOnlyFavorites),
-        _isLoading ? LoadingOverlay('Loading Products...') : SizedBox()
+        if (_isLoading) LoadingOverlay('Loading Products...')
       ]),
     );
   }

@@ -12,10 +12,13 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isLoading = false;
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<Cart>(context);
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text('Your Cart Items'),
       ),
@@ -49,27 +52,64 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                     backgroundColor: Theme.of(context).primaryColor,
                   ),
-                  FlatButton(
-                    onPressed: cart.getItemsCount == 0
-                        ? null
-                        : () async {
-                            try {
-                              await Provider.of<Orders>(context, listen: false)
-                                  .addOrder(
-                                cart.items.values.toList(),
-                                cart.totalAmount,
-                              );
-                              cart.clear();
-                            } catch (error) {}
-                          },
-                    child: Text(
-                      'ORDER NOW!',
-                      style: TextStyle(
-                          color: cart.getItemsCount == 0
-                              ? Colors.grey
-                              : Theme.of(context).primaryColor),
-                    ),
-                  ),
+                  _isLoading
+                      ? Container(
+                          width: 100,
+                          alignment: Alignment.center,
+                          child: Container(
+                            width: 40,
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      : FlatButton(
+                          onPressed: cart.getItemsCount == 0 || _isLoading
+                              ? null
+                              : () async {
+                                  try {
+                                    setState(() {
+                                      _isLoading = true;
+                                    });
+                                    await Provider.of<Orders>(context,
+                                            listen: false)
+                                        .addOrder(
+                                      cart.items.values.toList(),
+                                      cart.totalAmount,
+                                    );
+                                    cart.clear();
+                                    setState(() {
+                                      _isLoading = false;
+                                    });
+                                    _scaffoldKey.currentState
+                                        .hideCurrentSnackBar();
+                                    _scaffoldKey.currentState.showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Order successfully placed!',
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    );
+                                  } catch (error) {
+                                    _scaffoldKey.currentState
+                                        .hideCurrentSnackBar();
+                                    _scaffoldKey.currentState.showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'An error occured!',
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                          child: Text(
+                            'ORDER NOW!',
+                            style: TextStyle(
+                                color: cart.getItemsCount == 0
+                                    ? Colors.grey
+                                    : Theme.of(context).primaryColor),
+                          ),
+                        ),
                 ],
               ),
             ),

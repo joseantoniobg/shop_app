@@ -9,6 +9,11 @@ import './product.dart';
 class Products with ChangeNotifier {
   static const urlRepository = '/products';
 
+  final String authToken;
+  final String userId;
+
+  Products(this.authToken, this.userId, this._items);
+
   List<Product> _items = [];
 
   // List<Product> _items = [
@@ -48,14 +53,22 @@ class Products with ChangeNotifier {
 
   var _showFavoritesOnly = false;
 
-  Future<void> fetchAndSetProducts() async {
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
     try {
-      final response =
-          await http.get(GeneralConfig.baseURL + urlRepository + '.json');
+      final filter = filterByUser ? 'orderBy="userId"&equalTo="$userId"' : '';
+      final response = await http.get(GeneralConfig.baseURL +
+          urlRepository +
+          '.json?auth=$authToken&$filter');
       final extratedData = json.decode(response.body) as Map<String, dynamic>;
       final List<Product> loadedProducts = [];
 
       if (extratedData != null) {
+        final favoriteResponse = await http.get(GeneralConfig.baseURL +
+            Product.favoritesurlRepository +
+            '/$userId.json?auth=$authToken');
+
+        final favoriteData = json.decode(favoriteResponse.body);
+
         extratedData.forEach((prodId, prodData) {
           loadedProducts.add(Product(
             id: prodId,
@@ -63,7 +76,8 @@ class Products with ChangeNotifier {
             imageUrl: prodData['imageUrl'],
             price: prodData['price'],
             title: prodData['title'],
-            isFavorite: prodData['isFavorite'],
+            isFavorite:
+                favoriteData == null ? false : favoriteData[prodId] ?? false,
           ));
         });
       }
@@ -102,13 +116,13 @@ class Products with ChangeNotifier {
   Future<void> addProductAsync(Product prod) async {
     try {
       final response = await http.post(
-        GeneralConfig.baseURL + urlRepository + '.json',
+        GeneralConfig.baseURL + urlRepository + '.json?auth=$authToken',
         body: json.encode({
           'title': prod.title,
           'description': prod.description,
           'imageUrl': prod.imageUrl,
           'price': prod.price,
-          'isFavorite': prod.isFavorite
+          'userId': userId,
         }),
       );
 
@@ -126,38 +140,39 @@ class Products with ChangeNotifier {
     }
   }
 
-  Future<void> addProduct(Product prod) {
-    return http
-        .post(
-      GeneralConfig.baseURL + urlRepository + '.json',
-      body: json.encode({
-        'title': prod.title,
-        'description': prod.description,
-        'imageUrl': prod.imageUrl,
-        'price': prod.price,
-        'isFavorite': prod.isFavorite
-      }),
-    )
-        .then((response) {
-      final newProduct = Product(
-        id: json.decode(response.body)['name'],
-        title: prod.title,
-        description: prod.description,
-        price: prod.price,
-        imageUrl: prod.imageUrl,
-      );
-      _items.add(newProduct);
-      notifyListeners();
-    }).catchError((error) {
-      throw error;
-    });
-  }
+  // Future<void> addProduct(Product prod) {
+  //   return http
+  //       .post(
+  //     GeneralConfig.baseURL + urlRepository + '.json?auth=$authToken',
+  //     body: json.encode({
+  //       'title': prod.title,
+  //       'description': prod.description,
+  //       'imageUrl': prod.imageUrl,
+  //       'price': prod.price,
+  //       'userId': userId,
+  //     }),
+  //   )
+  //       .then((response) {
+  //     final newProduct = Product(
+  //       id: json.decode(response.body)['name'],
+  //       title: prod.title,
+  //       description: prod.description,
+  //       price: prod.price,
+  //       imageUrl: prod.imageUrl,
+  //     );
+  //     _items.add(newProduct);
+  //     notifyListeners();
+  //   }).catchError((error) {
+  //     throw error;
+  //   });
+  // }
 
   Future<void> updateProduct(String id, Product prod) async {
     try {
       final prodIndex = _items.indexWhere((element) => element.id == id);
       if (prodIndex >= 0) {
-        final url = GeneralConfig.baseURL + urlRepository + '/$id.json';
+        final url =
+            GeneralConfig.baseURL + urlRepository + '/$id.json?auth=$authToken';
         await http.patch(url,
             body: json.encode({
               'title': prod.title,
@@ -179,7 +194,8 @@ class Products with ChangeNotifier {
   Future<void> removeProduct(String id) async {
     final prodIndex = _items.indexWhere((element) => element.id == id);
     if (prodIndex >= 0) {
-      final url = GeneralConfig.baseURL + urlRepository + '/$id.json';
+      final url =
+          GeneralConfig.baseURL + urlRepository + '/$id.json?auth=$authToken';
       final existingIndex = _items.indexWhere((element) => element.id == id);
       var existingProduct = this.findById(id);
       final response = await http.delete(url);
